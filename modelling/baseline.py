@@ -11,7 +11,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.cuda.amp import autocast
-
+from config import cfg
 from utils.misc import get_backbone
 
 from .backbones.resnet import BasicBlock, Bottleneck, ResNet

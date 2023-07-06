@@ -1,0 +1,11 @@
+video_feed: D:\Programming\Python\AI\reid\centroids-reid\data\test_video\cctv.mp4
+
+blacklist: D:\Programming\Python\AI\reid\centroids-reid\data\blacklist
+
+whitelist: D:\Programming\Python\AI\reid\centroids-reid\data\whitelist
+
+yolo_version: yolo_nas_s #assuming pretrained weights are coco
+
+reid_checkpt: logs\market1501_resnet50_256_128_epoch_120.ckpt
+
+threshold: 0.5

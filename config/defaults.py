@@ -27,7 +27,7 @@ _C.MODEL.LAST_STRIDE = 1
 # Options: True | False
 _C.MODEL.PRETRAINED = True
 # Path to weights to load
-_C.MODEL.PRETRAIN_PATH = ""
+_C.MODEL.PRETRAIN_PATH = r"logs\market1501_resnet50_256_128_epoch_120.ckpt"
 # Create centroids
 _C.MODEL.USE_CENTROIDS = False
 # Ensures images to build centroids during retrieval
@@ -62,9 +62,10 @@ _C.DATASETS = CN()
 # List of the dataset names for training, as present in paths_catalog.py
 _C.DATASETS.NAMES = "market1501"
 # Root directory where datasets should be used (and downloaded if not found)
-_C.DATASETS.ROOT_DIR = "/home/data"
+_C.DATASETS.ROOT_DIR = r"D:\Programming\Python\AI\reid\centroids-reid\data\my-image-dataset"
+_C.DATASETS.COMPARISON = r"D:\Programming\Python\AI\reid\centroids-reid\data\comparison_ds"
 # Path to json train file for datasets that require it
-_C.DATASETS.JSON_TRAIN_PATH = ""
+_C.DATASETS.JSON_TRAIN_PATH = r""
 
 # -----------------------------------------------------------------------------
 # DATALOADER
@@ -97,7 +98,7 @@ _C.SOLVER.MOMENTUM = 0.9
 # Margin of triplet loss
 _C.SOLVER.MARGIN = 0.5
 # Function used to compute distance (euclidean or cosine for now)
-_C.SOLVER.DISTANCE_FUNC = "euclidean"
+_C.SOLVER.DISTANCE_FUNC = "cosine"
 # # Margin of cluster
 _C.SOLVER.CLUSTER_MARGIN = 0.3
 # # Learning rate of SGD to learn the centers of center loss
@@ -168,7 +169,8 @@ _C.LOG_DIR = "logs"
 # Whether to use mixed precision
 _C.USE_MIXED_PRECISION = True
 # If output dir is specified it overrides automatic output path creation
-_C.OUTPUT_DIR = ""
+_C.OUTPUT_DIR = r"D:\Programming\Python\AI\reid\centroids-reid\data\past-inference"
+_C.OUTPUT_DIR_SIM = r"D:\Programming\Python\AI\reid\centroids-reid\data\similarity_data"
 
 # ---------------------------------------------------------------------------- #
 # REPORDUCIBLE EXPERIMENTS
