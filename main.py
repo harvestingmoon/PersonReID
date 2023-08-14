@@ -1,6 +1,7 @@
 import cv2
 import yaml
 import os
+from collections import deque
 from super_gradients.training import models
 from pathlib import Path
 from train_ctl_model import CTLModel
@@ -8,11 +9,19 @@ import yolo_engine
 from reid_engine import ImageIndv_dev,Combined_Indv,ReID_Obj_Indv
 import reid_engine
 from config import cfg
-
+from multiprocessing.pool import ThreadPool
 
 with open("config.yaml","r") as f:
     config = yaml.safe_load(f)
+class NoReID:
+    def __init__(self,data):
+        self.data = data
 
+    def ready(self):
+        return True
+    def get(self):
+        return self.data
+    
 def prep_yolo_model(yolo: str, pretrained_weights ="coco"):
     model = models.get(yolo,pretrained_weights = pretrained_weights).cuda()
     return model
@@ -47,23 +56,41 @@ def video(yolo,reid):
     blacklist_list = preprocess("blacklist",yolo_model,reid_model,file= config['blacklist'])
     whitelist_list = preprocess("vip",yolo_model,reid_model,file= config['whitelist'])
     preprocessed_list = blacklist_list + whitelist_list
+    pending = deque()
+    thread_num = cv2.getNumberOfCPUs()
+    pool = ThreadPool(processes=thread_num)
+    reid = config['reid']
     while True:
+        while len(pending) > 0 and pending[0].ready():
+            res = pending.popleft().get()
+            cv2.imshow('ReID Threaded',res)
         ret,frame = video_feed.read()
-        cropped_images = yolo_engine.yolo_detector(frame,yolo_model)
-        detect_reid_list = []
-        for cropped_obj in cropped_images:
-            cropped_img = cropped_obj.image
-            indv_name = cropped_obj.name
-            if cropped_img.size == 0:
-                continue
-            val_loader = reid_engine.indv_image_transform(cfg,cropped_img,indv_name,ImageIndv_dev)
-            a1,name = reid_engine._inference(reid_model,val_loader)
-            detect_reid_list.append(ReID_Obj_Indv(cropped_obj,a1,False)) # this is the assumption that the name is just normal ( we do not know the actual name yet)
-        filtered_list = reid_engine.comparison(preprocessed_list,detect_reid_list,threshold= config['threshold'])
-        drawn_frame = reid_engine.face_drawer(frame,filtered_list)
-        cv2.imshow("ReID_frame",drawn_frame)
+        if reid:
+            cropped_images = yolo_engine.yolo_detector(frame,yolo_model)
+            detect_reid_list = []
+            for cropped_obj in cropped_images:
+                cropped_img = cropped_obj.image
+                indv_name = cropped_obj.name
+                if cropped_img.size == 0:
+                    continue
+                val_loader = reid_engine.indv_image_transform(cfg,cropped_img,indv_name,ImageIndv_dev)
+                a1,name = reid_engine._inference(reid_model,val_loader)
+                detect_reid_list.append(ReID_Obj_Indv(cropped_obj,a1,False)) # this is the assumption that the name is just normal ( we do not know the actual name yet)
+            filtered_list = reid_engine.comparison(preprocessed_list,detect_reid_list,threshold= config['threshold'])
+            task = pool.apply_async(reid_engine.face_drawer,(frame.copy(),filtered_list))
+           # pending.append(drawn_frame)
+        else:
+            task = NoReID(frame.copy())
+            
+        pending.append(task)
+        
+        ch = cv2.waitKey(1)
         if cv2.waitKey(1) & 0xFF== ord('q'):
             break
+            
+        if ch == ord('a'):
+            reid = not reid 
+
     video_feed.release()
     cv2.destroyAllWindows()
 
